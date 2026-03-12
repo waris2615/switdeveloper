@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant | SwitDeveloper</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* AI Page Specific Styles */
+        .ai-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            padding-top: 80px;
+        }
+
+        .ai-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            height: calc(100vh - 180px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ai-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .ai-header h1 {
+            color: white;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .ai-header p {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .ai-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .ai-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .chat-container {
+            flex: 1;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.bot {
+            align-self: flex-start;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .message.bot .avatar {
+            background: #764ba2;
+        }
+
+        .message.user .avatar {
+            background: #667eea;
+        }
+
+        .message p {
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .message code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .message pre {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        .message pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 5px;
+            padding: 15px 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 18px;
+            width: fit-content;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50px;
+            padding: 5px;
+        }
+
+        .chat-input-wrapper input {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .chat-input-wrapper input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .chat-input-wrapper button {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .chat-input-wrapper button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .chat-input-wrapper button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .quick-action {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-action:hover {
+            background: rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+
+        .task-result {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .task-result.success {
+            border-left: 3px solid #10b981;
+        }
+
+        .task-result.error {
+            border-left: 3px solid #ef4444;
+        }
+
+        .task-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .capabilities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .capability {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .capability i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 5px;
+            color: #667eea;
+        }
+
+        /* Scrollbar */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+
+        @media (max-width: 768px) {
+            .ai-container {
+                padding: 10px;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body class="ai-page">
+    <!-- Navigation -->
+    <nav class="navbar" style="background: rgba(15,12,41,0.95);">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">Swit<span>Developer</span></span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="services.html">Services</a></li>
+                <li><a href="ai.html" class="active">AI Assistant</a></li>
+                <li><a href="index.html#contact" class="btn-nav">Contact</a></li>
+            </ul>
+            <div class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <div class="ai-container">
+        <div class="ai-header">
+            <div class="ai-logo">
+                <div class="ai-avatar">🤖</div>
+                <h1>SwitAI Assistant</h1>
+            </div>
+            <p>Your intelligent assistant for questions, tasks, and more!</p>
+        </div>
+
+        <div class="quick-actions">
+            <button class="quick-action" onclick="askQuick('What services do you offer?')">📋 Services</button>
+            <button class="quick-action" onclick="askQuick('Calculate 123 * 456')">🔢 Calculator</button>
+            <button class="quick-action" onclick="askQuick('Tell me a joke')">😄 Joke</button>
+            <button class="quick-action" onclick="askQuick('What is Python?')">🐍 Learn Python</button>
+            <button class="quick-action" onclick="askQuick('Give me a motivational quote')">💪 Motivation</button>
+            <button class="quick-action" onclick="askQuick('Hello')">👋 Say Hello</button>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">
+                    <span class="avatar">🤖</span>
+                    <p>
+                        <strong>Hello! I'm SwitAI 🤖</strong><br><br>
+                        I'm an AI assistant here to help you with:<br>
+                        <div class="capabilities-grid">
+                            <div class="capability"><i class="fas fa-question-circle"></i> Answer Questions</div>
+                            <div class="capability"><i class="fas fa-calculator"></i> Math Calculations</div>
+                            <div class="capability"><i class="fas fa-code"></i> Coding Help</div>
+                            <div class="capability"><i class="fas fa-language"></i> Translations</div>
+                            <div class="capability"><i class="fas fa-lightbulb"></i> Explanations</div>
+                            <div class="capability"><i class="fas fa-tasks"></i> Task Help</div>
+                        </div>
+                        <br>
+                        <em>Type a message or use the quick actions above!</em>
+                    </p>
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <div class="chat-input-wrapper">
+                    <input type="text" id="chatInput" placeholder="Ask me anything..." autocomplete="off">
+                    <button id="sendButton" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendButton');
+
+        // Enter key to send
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function askQuick(question) {
+            chatInput.value = question;
+            sendMessage();
+        }
+
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            
+            const avatar = isUser ? '👤' : '🤖';
+            messageDiv.innerHTML = `<span class="avatar">${avatar}</span><p>${content}</p>`;
+            
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function showTyping() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot typing-message';
+            typingDiv.innerHTML = `
+                <span class="avatar">🤖</span>
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function removeTyping() {
+            const typing = document.querySelector('.typing-message');
+            if (typing) typing.remove();
+        }
+
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Add user message
+            addMessage(message, true);
+            chatInput.value = '';
+            sendButton.disabled = true;
+
+            // Show typing indicator
+            showTyping();
+
+            // Process message and get response
+            setTimeout(() => {
+                removeTyping();
+                const response = processMessage(message);
+                addMessage(response, false);
+                sendButton.disabled = false;
+            }, 1000 + Math.random() * 1000);
+        }
+
+        function processMessage(message) {
+            const lowerMessage = message.toLowerCase();
+
+            // Greetings
+            if (lowerMessage.match(/^(hi|hello|hey|hey there|hi there)/)) {
+                return "Hello! 👋 How can I help you today? Feel free to ask me anything!";
+            }
+
+            // Services
+            if (lowerMessage.includes('service')) {
+                return `Here's what we offer at <strong>SwitDeveloper</strong>:<br><br>
+                🔹 <strong>Web Development</strong> - Custom websites & web apps<br>
+                🔹 <strong>Digital Marketing</strong> - SEO, PPC, Social Media<br>
+                🔹 <strong>Mobile Apps</strong> - iOS & Android development<br>
+                🔹 <strong>AI Solutions</strong> - Chatbots & automation<br>
+                🔹 <strong>UI/UX Design</strong> - Beautiful user interfaces<br><br>
+                Want more details about any service?`;
+            }
+
+            // Calculator
+            if (lowerMessage.match(/calculate|compute|what is\s*\d+\s*[\+\-\*\/]\s*\d+/)) {
+                try {
+                    // Extract numbers and operators
+                    const nums = message.match(/\d+/g);
+                    const operators = message.match(/[\+\-\*\/]/);
+                    if (nums && nums.length >= 2) {
+                        let result;
+                        const a = parseFloat(nums[0]);
+                        const b = parseFloat(nums[1]);
+                        const op = operators ? operators[0] : '+';
+                        
+                        switch(op) {
+                            case '+': result = a + b; break;
+                            case '-': result = a - b; break;
+                            case '*': result = a * b; break;
+                            case '/': result = b !== 0 ? a / b : 'Infinity'; break;
+                            default: result = 'Unknown operation';
+                        }
+                        return `<strong>🧮 Calculation Result:</strong><br>
+                        <div class="task-result success">
+                            ${a} ${op} ${b} = <strong>${result}</strong>
+                        </div>`;
+                    }
+                } catch(e) {
+                    return "I couldn't parse that calculation. Try something like 'Calculate 5 + 3'";
+                }
+            }
+
+            // Jokes
+            if (lowerMessage.includes('joke')) {
+                const jokes = [
+                    "Why do programmers prefer dark mode? Because light attracts bugs! 🐛",
+                    "Why did the developer go broke? Because he used up all his cache! 💸",
+                    "A SQL query walks into a bar, walks up to two tables and asks... 'Can I join you?' 🍺",
+                    "Why do Java developers wear glasses? Because they can't C#! 👓",
+                    "There are only 10 types of people in the world: those who understand binary and those who don't."
+                ];
+                return jokes[Math.floor(Math.random() * jokes.length)];
+            }
+
+            // Motivational quotes
+            if (lowerMessage.includes('motivational') || lowerMessage.includes('motivation') || lowerMessage.includes('quote')) {
+                const quotes = [
+                    "💪 'The only way to do great work is to love what you do.' - Steve Jobs",
+                    "💪 'Innovation distinguishes between a leader and a follower.' - Steve Jobs",
+                    "💪 'Success is not final, failure is not fatal: it is the courage to continue that counts.' - Churchill",
+                    "💪 'The future belongs to those who believe in the beauty of their dreams.' - Eleanor Roosevelt",
+                    "💪 'Don't watch the clock; do what it does. Keep going.' - Sam Levenson"
+                ];
+                return quotes[Math.floor(Math.random() * quotes.length)];
+            }
+
+            // Learn about programming languages
+            if (lowerMessage.includes('python')) {
+                return `<strong>🐍 Python</strong> is a high-level, interpreted programming language known for its simplicity and readability.<br><br>
+                <strong>Key Features:</strong><br>
+                ✅ Easy to learn and read<br>
+                ✅ Versatile - web, data science, AI, automation<br>
+                ✅ Large ecosystem of libraries<br>
+                ✅ Cross-platform<br><br>
+                <strong>Example:</strong><br>
+                <code>print("Hello, World!")</code>`;
+            }
+
+            if (lowerMessage.includes('javascript') || lowerMessage.includes('js')) {
+                return `<strong>🟨 JavaScript</strong> is the language of the web!<br><br>
+                <strong>Key Features:</strong><br>
+                ✅ Runs in browsers and servers (Node.js)<br>
+                ✅ Dynamic and flexible<br>
+                ✅ Huge ecosystem (npm)<br>
+                ✅ Powers interactive websites<br><br>
+                <strong>Example:</strong><br>
+                <code>console.log("Hello, World!");</code>`;
+            }
+
+            // Who are you / About
+            if (lowerMessage.includes('who are you') || lowerMessage.includes('about you')) {
+                return `I'm <strong>SwitAI</strong> 🤖, an AI assistant created by <strong>SwitDeveloper</strong>!<br><br>
+                I can help you with:<br>
+                • Answering questions<br>
+                • Explaining concepts<br>
+                • Math calculations<br>
+                • Coding help<br>
+                • And more!<br><br>
+                I'm here to demonstrate AI capabilities for our clients. 🚀`;
+            }
+
+            // Help
+            if (lowerMessage.includes('help')) {
+                return `Here's how I can help you:<br><br>
+                📝 <strong>Answer questions</strong> - Ask me anything!<br>
+                🔢 <strong>Math</strong> - Try "Calculate 10 + 5"<br>
+                💻 <strong>Coding</strong> - Ask about any programming language<br>
+                😄 <strong>Fun</strong> - Ask for a joke or quote<br>
+                📋 <strong>Services</strong> - Learn about our services<br><br>
+                What would you like to know?`;
+            }
+
+            // Contact / Pricing
+            if (lowerMessage.includes('contact') || lowerMessage.includes('price') || lowerMessage.includes('cost')) {
+                return `For pricing and contact information, please visit our <a href="index.html#contact">contact page</a> or check our <a href="services.html">services page</a> for detailed pricing.<br><br>
+                You can also email us at <strong>hello@switdeveloper.com</strong> 📧`;
+            }
+
+            // Default response
+            const responses = [
+                `That's an interesting question! Let me think... 🤔<br><br>
+                I can help with: services, pricing, coding questions, math calculations, jokes, and more! What specifically would you like to know?`,
+                `Great question! 🌟<br><br>
+                I'm best at answering questions about our services, providing coding help, doing calculations, and having fun! Could you be more specific?`,
+                `I understand you're asking about <em>"${message}"</em>.<br><br>
+                To give you the best answer, could you try:<br>
+                • Asking about our services<br>
+                • Asking for help with something specific<br>
+                • Trying a math calculation like "Calculate 5 * 5"`
+            ];
+            
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+    </script>
+
+    <script src="script.js"></script>
+</body>
+</html>
